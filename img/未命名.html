@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>收款码管理与下载系统</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+  <!-- 配置Tailwind自定义主题 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3b82f6',
+            secondary: '#10b981',
+            accent: '#f59e0b',
+            danger: '#ef4444',
+            dark: '#1e293b',
+            light: '#f8fafc'
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .card-shadow {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      }
+      .btn-hover {
+        transition: all 0.3s ease;
+      }
+      .btn-hover:hover {
+        transform: translateY(-2px);
+      }
+      .fade-in {
+        animation: fadeIn 0.5s ease-in-out;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      .scale-in {
+        animation: scaleIn 0.3s ease-out;
+      }
+      @keyframes scaleIn {
+        from { transform: scale(0.95); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800">
+  <!-- 顶部导航栏 -->
+  <header class="bg-white shadow-sm sticky top-0 z-50 transition-all duration-300" id="navbar">
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center space-x-2">
+        <i class="fa fa-qrcode text-primary text-2xl"></i>
+        <h1 class="text-xl font-bold text-gray-800">收款码管理系统</h1>
+      </div>
+      <nav class="hidden md:flex space-x-6">
+        <a href="#dashboard" class="nav-link text-gray-600 hover:text-primary transition-colors">控制台</a>
+        <a href="#payment-codes" class="nav-link text-gray-600 hover:text-primary transition-colors">收款码管理</a>
+        <a href="#frontend" class="nav-link text-gray-600 hover:text-primary transition-colors">前端展示</a>
+        <a href="#analytics" class="nav-link text-gray-600 hover:text-primary transition-colors">数据分析</a>
+      </nav>
+      <div class="flex items-center space-x-4">
+        <button class="hidden md:block px-4 py-2 rounded-md bg-primary text-white hover:bg-primary/90 transition-colors">
+          <i class="fa fa-user-circle mr-1"></i> 管理员
+        </button>
+        <button class="md:hidden text-gray-600 focus:outline-none" id="mobile-menu-button">
+          <i class="fa fa-bars text-xl"></i>
+        </button>
+      </div>
+    </div>
+    <!-- 移动端菜单 -->
+    <div class="md:hidden hidden bg-white border-t" id="mobile-menu">
+      <div class="container mx-auto px-4 py-2 flex flex-col space-y-3">
+        <a href="#dashboard" class="py-2 text-gray-600 hover:text-primary transition-colors">控制台</a>
+        <a href="#payment-codes" class="py-2 text-gray-600 hover:text-primary transition-colors">收款码管理</a>
+        <a href="#frontend" class="py-2 text-gray-600 hover:text-primary transition-colors">前端展示</a>
+        <a href="#analytics" class="py-2 text-gray-600 hover:text-primary transition-colors">数据分析</a>
+        <a href="#" class="py-2 text-gray-600 hover:text-primary transition-colors">
+          <i class="fa fa-user-circle mr-1"></i> 管理员
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-8">
+    <!-- 控制面板 -->
+    <section id="dashboard" class="mb-12 fade-in">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">控制面板</h2>
+        <div class="flex space-x-2">
+          <button class="px-4 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors btn-hover">
+            <i class="fa fa-refresh mr-1"></i> 刷新数据
+          </button>
+          <button class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors btn-hover">
+            <i class="fa fa-download mr-1"></i> 导出报表
+          </button>
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- 统计卡片 1 -->
+        <div class="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow scale-in card-shadow">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-gray-500 text-sm">今日下载量</p>
+              <h3 class="text-3xl font-bold mt-1 mb-2">128</h3>
+              <p class="text-green-500 text-sm flex items-center">
+                <i class="fa fa-arrow-up mr-1"></i> 12.5% <span class="text-gray-400 ml-1">较昨日</span>
+              </p>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-primary">
+              <i class="fa fa-download text-xl"></i>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 统计卡片 2 -->
+        <div class="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow scale-in card-shadow" style="animation-delay: 0.1s">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-gray-500 text-sm">收款成功次数</p>
+              <h3 class="text-3xl font-bold mt-1 mb-2">96</h3>
+              <p class="text-green-500 text-sm flex items-center">
+                <i class="fa fa-arrow-up mr-1"></i> 8.3% <span class="text-gray-400 ml-1">较昨日</span>
+              </p>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-secondary">
+              <i class="fa fa-check-circle text-xl"></i>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 统计卡片 3 -->
+        <div class="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow scale-in card-shadow" style="animation-delay: 0.2s">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-gray-500 text-sm">支付转化率</p>
+              <h3 class="text-3xl font-bold mt-1 mb-2">75%</h3>
+              <p class="text-red-500 text-sm flex items-center">
+                <i class="fa fa-arrow-down mr-1"></i> 2.1% <span class="text-gray-400 ml-1">较昨日</span>
+              </p>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center text-accent">
+              <i class="fa fa-percent text-xl"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- 趋势图表 -->
+        <div class="bg-white rounded-xl p-6 shadow-sm card-shadow">
+          <h3 class="text-lg font-semibold mb-4">下载趋势</h3>
+          <div class="h-64">
+            <canvas id="downloadChart"></canvas>
+          </div>
+        </div>
+        
+        <!-- 支付方式分布 -->
+        <div class="bg-white rounded-xl p-6 shadow-sm card-shadow">
+          <h3 class="text-lg font-semibold mb-4">支付方式分布</h3>
+          <div class="h-64">
+            <canvas id="paymentMethodChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- 收款码管理 -->
+    <section id="payment-codes" class="mb-12 fade-in">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">收款码管理</h2>
+        <button id="add-payment-btn" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors btn-hover">
+          <i class="fa fa-plus mr-1"></i> 添加收款码
+        </button>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- 微信收款码 -->
+        <div class="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow card-shadow">
+          <div class="bg-green-50 border-b border-green-100 px-6 py-4">
+            <div class="flex justify-between items-center">
+              <h3 class="font-semibold text-green-700 flex items-center">
+                <i class="fa fa-weixin text-xl mr-2"></i> 微信收款
+              </h3>
+              <div class="flex space-x-2">
+                <button class="edit-code text-gray-500 hover:text-primary transition-colors" data-type="wechat">
+                  <i class="fa fa-pencil"></i>
+                </button>
+                <button class="delete-code text-gray-500 hover:text-danger transition-colors" data-type="wechat">
+                  <i class="fa fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="p-6">
+            <div class="bg-gray-100 rounded-lg p-4 flex justify-center items-center mb-4 h-48">
+              <img id="wechat-qrcode" src="https://picsum.photos/seed/wechat/200/200" alt="微信收款码" class="max-h-full max-w-full object-contain">
+            </div>
+            <div class="mb-3">
+              <label class="block text-sm text-gray-500 mb-1">微信账号</label>
+              <p id="wechat-account" class="text-gray-800 font-medium">wechat_user123</p>
+            </div>
+            <div>
+              <label class="block text-sm text-gray-500 mb-1">最近更新</label>
+              <p class="text-gray-600 text-sm">2023-06-15 14:30</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 支付宝收款码 -->
+        <div class="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow card-shadow">
+          <div class="bg-blue-50 border-b border-blue-100 px-6 py-4">
+            <div class="flex justify-between items-center">
+              <h3 class="font-semibold text-blue-700 flex items-center">
+                <i class="fa fa-credit-card text-xl mr-2"></i> 支付宝收款
+              </h3>
+              <div class="flex space-x-2">
+                <button class="edit-code text-gray-500 hover:text-primary transition-colors" data-type="alipay">
+                  <i class="fa fa-pencil"></i>
+                </button>
+                <button class="delete-code text-gray-500 hover:text-danger transition-colors" data-type="alipay">
+                  <i class="fa fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="p-6">
+            <div class="bg-gray-100 rounded-lg p-4 flex justify-center items-center mb-4 h-48">
+              <img id="alipay-qrcode" src="https://picsum.photos/seed/alipay/200/200" alt="支付宝收款码" class="max-h-full max-w-full object-contain">
+            </div>
+            <div class="mb-3">
+              <label class="block text-sm text-gray-500 mb-1">支付宝账号</label>
+              <p id="alipay-account" class="text-gray-800 font-medium">alipay_user456</p>
+            </div>
+            <div>
+              <label class="block text-sm text-gray-500 mb-1">最近更新</label>
+              <p class="text-gray-600 text-sm">2023-06-10 09:15</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- QQ收款码 -->
+        <div class="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow card-shadow">
+          <div class="bg-red-50 border-b border-red-100 px-6 py-4">
+            <div class="flex justify-between items-center">
+              <h3 class="font-semibold text-red-700 flex items-center">
+                <i class="fa fa-qq text-xl mr-2"></i> QQ收款
+              </h3>
+              <div class="flex space-x-2">
+                <button class="edit-code text-gray-500 hover:text-primary transition-colors" data-type="qq">
+                  <i class="fa fa-pencil"></i>
+                </button>
+                <button class="delete-code text-gray-500 hover:text-danger transition-colors" data-type="qq">
+                  <i class="fa fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="p-6">
+            <div class="bg-gray-100 rounded-lg p-4 flex justify-center items-center mb-4 h-48">
+              <img id="qq-qrcode" src="https://picsum.photos/seed/qq/200/200" alt="QQ收款码" class="max-h-full max-w-full object-contain">
+            </div>
+            <div class="mb-3">
+              <label class="block text-sm text-gray-500 mb-1">QQ账号</label>
+              <p id="qq-account" class="text-gray-800 font-medium">123456789</p>
+            </div>
+            <div>
+              <label class="block text-sm text-gray-500 mb-1">最近更新</label>
+              <p class="text-gray-600 text-sm">2023-06-05 16:45</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- 前端展示预览 -->
+    <section id="frontend" class="mb-12 fade-in">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">前端展示预览</h2>
+        <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors btn-hover">
+          <i class="fa fa-external-link mr-1"></i> 在新窗口打开
+        </button>
+      </div>
+      
+      <div class="bg-white rounded-xl shadow-sm p-6 card-shadow">
+        <div class="border border-gray-200 rounded-lg overflow-hidden max-w-2xl mx-auto">
+          <!-- 前端页面头部 -->
+          <div class="bg-gradient-to-r from-primary to-blue-600 text-white p-6 text-center">
+            <h3 class="text-xl font-bold mb-2">资源下载</h3>
+            <p class="text-blue-100">请完成支付后获取下载链接</p>
+          </div>
+          
+          <!-- 资源信息 -->
+          <div class="p-6 border-b border-gray-100">
+            <div class="flex items-center mb-4">
+              <div class="w-12 h-12 rounded bg-blue-100 flex items-center justify-center text-primary mr-4">
+                <i class="fa fa-file-archive-o text-xl"></i>
+              </div>
+              <div>
+                <h4 class="font-semibold">高级资源包.zip</h4>
+                <p class="text-gray-500 text-sm">文件大小: 256 MB | 格式: ZIP</p>
+              </div>
+            </div>
+            <div class="bg-gray-50 rounded-lg p-4">
+              <p class="text-gray-600 text-sm">
+                该资源包含专业模板、素材库和使用教程，适用于设计师和开发者。完成支付后即可获取永久下载权限。
+              </p>
+            </div>
+            <div class="mt-4 text-center">
+              <span class="text-2xl font-bold text-primary">¥29.90</span>
+            </div>
+          </div>
+          
+          <!-- 支付方式选择 -->
+          <div class="p-6">
+            <h4 class="font-semibold mb-4">选择支付方式</h4>
+            
+            <div class="grid grid-cols-3 gap-4 mb-6">
+              <div class="payment-option border-2 border-transparent hover:border-primary rounded-lg p-3 cursor-pointer transition-colors text-center" data-method="wechat">
+                <i class="fa fa-weixin text-2xl text-green-500 mb-2"></i>
+                <p class="text-sm">微信支付</p>
+              </div>
+              <div class="payment-option border-2 border-transparent hover:border-primary rounded-lg p-3 cursor-pointer transition-colors text-center" data-method="alipay">
+                <i class="fa fa-credit-card text-2xl text-blue-500 mb-2"></i>
+                <p class="text-sm">支付宝</p>
+              </div>
+              <div class="payment-option border-2 border-transparent hover:border-primary rounded-lg p-3 cursor-pointer transition-colors text-center" data-method="qq">
+                <i class="fa fa-qq text-2xl text-red-500 mb-2"></i>
+                <p class="text-sm">QQ支付</p>
+              </div>
+            </div>
+            
+            <!-- 收款码显示区域 -->
+            <div id="payment-display" class="text-center">
+              <div class="bg-gray-100 rounded-lg p-6 inline-block mb-4">
+                <img id="frontend-qrcode" src="https://picsum.photos/seed/wechat/200/200" alt="收款码" class="w-64 h-64 object-contain">
+              </div>
+              <div class="mb-4">
+                <p class="text-gray-700 font-medium mb-1">收款账号</p>
+                <p id="frontend-account" class="text-gray-800">wechat_user123</p>
+              </div>
+              <p class="text-sm text-gray-500 mb-6">
+                请使用对应App扫描上方二维码完成支付，金额: ¥0.01
+
+
+              </p>
+              <button id="payment-complete-btn" class="px-6 py-3 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors btn-hover w-full md:w-auto">
+                已完成支付，获取下载链接
+              </button>
+            </div>
+
+  
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- 数据分析 -->
+    <section id="analytics" class="mb-12 fade-in">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">数据分析</h2>
+      
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- 设备分布 -->
+        <div class="bg-white rounded-xl p-6 shadow-sm card-shadow">
+          <h3 class="text-lg font-semibold mb-4">访问设备分布</h3>
+          <div class="h-64">
+            <canvas id="deviceChart"></canvas>
+          </div>
+        </div>
+        
+        <!-- 地区分布 -->
+        <div class="bg-white rounded-xl p-6 shadow-sm card-shadow">
+          <h3 class="text-lg font-semibold mb-4">用户地区分布</h3>
+          <div class="space-y-4">
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-sm">北京</span>
+                <span class="text-sm">28%</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2.5">
+                <div class="bg-primary h-2.5 rounded-full" style="width: 28%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-sm">上海</span>
+                <span class="text-sm">22%</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2.5">
+                <div class="bg-primary h-2.5 rounded-full" style="width: 22%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-sm">广州</span>
+                <span class="text-sm">18%</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2.5">
+                <div class="bg-primary h-2.5 rounded-full" style="width: 18%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-sm">深圳</span>
+                <span class="text-sm">15%</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2.5">
+                <div class="bg-primary h-2.5 rounded-full" style="width: 15%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-sm">其他地区</span>
+                <span class="text-sm">17%</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2.5">
+                <div class="bg-primary h-2.5 rounded-full" style="width: 17%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  
+  <!-- 页脚 -->
+  <footer class="bg-dark text-gray-400 py-8">
+    <div class="container mx-auto px-4">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <div class="mb-4 md:mb-0">
+          <div class="flex items-center space-x-2 text-white mb-2">
+            <i class="fa fa-qrcode text-primary"></i>
+            <span class="font-bold">收款码管理系统</span>
+          </div>
+          <p class="text-sm">高效管理收款码，提升下载转化率</p>
+        </div>
+        <div class="flex space-x-6">
+          <a href="#" class="hover:text-white transition-colors"><i class="fa fa-question-circle"></i> 帮助中心</a>
+          <a href="#" class="hover:text-white transition-colors"><i class="fa fa-file-text-o"></i> 使用条款</a>
+          <a href="#" class="hover:text-white transition-colors"><i class="fa fa-shield"></i> 隐私政策</a>
+        </div>
+      </div>
+      <div class="border-t border-gray-700 mt-6 pt-6 text-center text-sm">
+        &copy; 2023 收款码管理系统 版权所有
+      </div>
+    </div>
+  </footer>
+  
+  <!-- 编辑收款码模态框 -->
+  <div id="edit-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center fade-in">
+    <div class="bg-white rounded-xl w-full max-w-md mx-4 scale-in">
+      <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+        <h3 class="text-xl font-bold" id="modal-title">编辑微信收款码</h3>
+        <button id="close-modal" class="text-gray-500 hover:text-gray-700">
+          <i class="fa fa-times text-xl"></i>
+        </button>
+      </div>
+      <div class="p-6">
+        <form id="edit-form">
+          <input type="hidden" id="payment-type" value="wechat">
+          
+          <div class="mb-4">
+            <label for="account-input" class="block text-gray-700 mb-2">账号信息</label>
+            <input type="text" id="account-input" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="13901518851">
+          </div>
+          
+          <div class="mb-6">
+            <label class="block text-gray-700 mb-2">收款码图片</label>
+            <div class="border-2 border-dashed border-gray-300 rounded-md p-6 text-center hover:border-primary transition-colors">
+              <img id="preview-image" src="https://picsum.photos/seed/wechat/200/200" alt="预览图" class="max-w-full max-h-40 mx-auto mb-4">
+              <input type="file" id="image-upload" accept="image/*" class="hidden">
+              <button type="button" id="upload-btn" class="px-4 py-2 border border-primary text-primary rounded-md hover:bg-primary hover:text-white transition-colors">
+                <i class="fa fa-upload mr-1"></i> 上传图片
+              </button>
+            </div>
+          </div>
+          
+          <div class="flex space-x-3">
+            <button type="button" id="cancel-edit" class="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">取消</button>
+            <button type="submit" class="flex-1 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors">保存修改</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 下载页面模态框 -->
+  <div id="download-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center fade-in">
+    <div class="bg-white rounded-xl w-full max-w-md mx-4 scale-in">
+      <div class="p-6 border-b border-gray-100 text-center">
+        <div class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center text-green-500 mx-auto mb-4">
+          <i class="fa fa-check text-2xl"></i>
+        </div>
+        <h3 class="text-xl font-bold mb-2">支付成功</h3>
+        <p class="text-gray-600">感谢您的支持，现在可以下载资源了</p>
+      </div>
+      <div class="p-6">
+        <div class="bg-gray-50 rounded-lg p-4 mb-6">
+          <div class="flex items-center">
+            <div class="w-10 h-10 rounded bg-blue-100 flex items-center justify-center text-primary mr-3">
+              <i class="fa fa-file-archive-o"></i>
+            </div>
+            <div>
+              <h4 class="font-medium">高级资源包.zip</h4>
+              <p class="text-gray-500 text-sm">256 MB · ZIP格式</p>
+            </div>
+          </div>
+        </div>
+        <p>
+<h3>点击下方资源下载<h3>
+<a href="https://wwfz.lanzoum.com/iiKTq380t4bg">Kx3538驱动【扫码支付10元】{1}</a>
+    </p> <hr /></i> 立即下载
+        </a>
+        <p>
+
+        <p class="text-center text-gray-500 text-sm mt-4">
+          下载链接24小时内有效，过期后需重新购买
+        </p>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // 导航栏滚动效果
+    window.addEventListener('scroll', function() {
+      const navbar = document.getElementById('navbar');
+      if (window.scrollY > 10) {
+        navbar.classList.add('shadow');
+        navbar.classList.remove('shadow-sm');
+      } else {
+        navbar.classList.remove('shadow');
+        navbar.classList.add('shadow-sm');
+      }
+    });
+    
+    // 移动端菜单切换
+    document.getElementById('mobile-menu-button').addEventListener('click', function() {
+      const mobileMenu = document.getElementById('mobile-menu');
+      mobileMenu.classList.toggle('hidden');
+    });
+    
+    // 编辑收款码功能
+    const editModal = document.getElementById('edit-modal');
+    const closeModal = document.getElementById('close-modal');
+    const cancelEdit = document.getElementById('cancel-edit');
+    const editForm = document.getElementById('edit-form');
+    const uploadBtn = document.getElementById('upload-btn');
+    const imageUpload = document.getElementById('image-upload');
+    const previewImage = document.getElementById('preview-image');
+    const modalTitle = document.getElementById('modal-title');
+    const paymentType = document.getElementById('payment-type');
+    const accountInput = document.getElementById('account-input');
+    
+    // 打开编辑模态框
+    document.querySelectorAll('.edit-code').forEach(button => {
+      button.addEventListener('click', function() {
+        const type = this.getAttribute('data-type');
+        let title, account, imageSrc;
+        
+        switch(type) {
+          case 'wechat':
+            title = '编辑微信收款码';
+            account = document.getElementById('wechat-account').textContent;
+            imageSrc = document.getElementById('wechat-qrcode').src;
+            break;
+          case 'alipay':
+            title = '编辑支付宝收款码';
+            account = document.getElementById('alipay-account').textContent;
+            imageSrc = document.getElementById('alipay-qrcode').src;
+            break;
+          case 'qq':
+            title = '编辑QQ收款码';
+            account = document.getElementById('qq-account').textContent;
+            imageSrc = document.getElementById('qq-qrcode').src;
+            break;
+        }
+        
+        modalTitle.textContent = title;
+        paymentType.value = type;
+        accountInput.value = account;
+        previewImage.src = imageSrc;
+        
+        editModal.classList.remove('hidden');
+        editModal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+      });
+    });
+    
+    // 关闭编辑模态框
+    function closeEditModal() {
+      editModal.classList.add('hidden');
+      editModal.classList.remove('flex');
+      document.body.style.overflow = '';
+    }
+    
+    closeModal.addEventListener('click', closeEditModal);
+    cancelEdit.addEventListener('click', closeEditModal);
+    
+    // 图片上传预览
+    uploadBtn.addEventListener('click', function() {
+      imageUpload.click();
+    });
+    
+    imageUpload.addEventListener('change', function(e) {
+      if (e.target.files && e.target.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          previewImage.src = e.target.result;
+        }
+        reader.readAsDataURL(e.target.files[0]);
+      }
+    });
+    
+    // 保存编辑
+    editForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const type = paymentType.value;
+      const account = accountInput.value;
+      const imageSrc = previewImage.src;
+      
+      // 更新显示
+      document.getElementById(`${type}-account`).textContent = account;
+      document.getElementById(`${type}-qrcode`).src = imageSrc;
+      
+      // 如果是当前选中的支付方式，同步更新前端预览
+      const activePayment = document.querySelector('.payment-option.border-primary');
+      if (activePayment && activePayment.getAttribute('data-method') === type) {
+        document.getElementById('frontend-qrcode').src = imageSrc;
+        document.getElementById('frontend-account').textContent = account;
+      }
+      
+      // 显示成功提示
+      alert('收款码信息已更新');
+      closeEditModal();
+    });
+    
+    // 支付方式选择
+    document.querySelectorAll('.payment-option').forEach(option => {
+      option.addEventListener('click', function() {
+        // 移除其他选项的选中状态
+        document.querySelectorAll('.payment-option').forEach(opt => {
+          opt.classList.remove('border-primary');
+          opt.classList.add('border-transparent');
+        });
+        
+        // 添加当前选项的选中状态
+        this.classList.remove('border-transparent');
+        this.classList.add('border-primary');
+        
+        // 更新收款码显示
+        const method = this.getAttribute('data-method');
+        const qrcodeSrc = document.getElementById(`${method}-qrcode`).src;
+        const account = document.getElementById(`${method}-account`).textContent;
+        
+        document.getElementById('frontend-qrcode').src = qrcodeSrc;
+        document.getElementById('frontend-account').textContent = account;
+      });
+    });
+    
+    // 支付完成，显示下载页面
+    const downloadModal = document.getElementById('download-modal');
+    
+    document.getElementById('payment-complete-btn').addEventListener('click', function() {
+      downloadModal.classList.remove('hidden');
+      downloadModal.classList.add('flex');
+      document.body.style.overflow = 'hidden';
+    });
+    
+    // 关闭下载模态框
+    downloadModal.addEventListener('click', function(e) {
+      if (e.target === downloadModal) {
+        downloadModal.classList.add('hidden');
+        downloadModal.classList.remove('flex');
+        document.body.style.overflow = '';
+      }
+    });
+    
+    // 删除收款码确认
+    document.querySelectorAll('.delete-code').forEach(button => {
+      button.addEventListener('click', function() {
+        const type = this.getAttribute('data-type');
+        let typeName;
+        
+        switch(type) {
+          case 'wechat': typeName = '微信'; break;
+          case 'alipay': typeName = '支付宝'; break;
+          case 'qq': typeName = 'QQ'; break;
+        }
+        
+        if (confirm(`确定要删除${typeName}收款码吗？`)) {
+          // 这里可以添加删除逻辑
+          alert(`${typeName}收款码已删除`);
+        }
+      });
+    });
+    
+    // 添加收款码按钮
+    document.getElementById('add-payment-btn').addEventListener('click', function() {
+      alert('添加新收款码功能');
+    });
+    
+    // 初始化图表
+    window.addEventListener('load', function() {
+      // 下载趋势图表
+      const downloadCtx = document.getElementById('downloadChart').getContext('2d');
+      new Chart(downloadCtx, {
+        type: 'line',
+        data: {
+          labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+          datasets: [{
+            label: '下载量',
+            data: [65, 78, 52, 91, 83, 125, 128],
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            tension: 0.3,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+      
+      // 支付方式分布图表
+      const paymentCtx = document.getElementById('paymentMethodChart').getContext('2d');
+      new Chart(paymentCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['微信支付', '支付宝', 'QQ支付'],
+          datasets: [{
+            data: [45, 35, 20],
+            backgroundColor: [
+              '#22c55e', // 微信绿
+              '#3b82f6', // 支付宝蓝
+              '#ef4444'  // QQ红
+            ],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom'
+            }
+          },
+          cutout: '65%'
+        }
+      });
+      
+      // 设备分布图表
+      const deviceCtx = document.getElementById('deviceChart').getContext('2d');
+      new Chart(deviceCtx, {
+        type: 'pie',
+        data: {
+          labels: ['移动设备', '桌面设备', '平板设备'],
+          datasets: [{
+            data: [68, 24, 8],
+            backgroundColor: [
+              '#3b82f6',
+              '#10b981',
+              '#f59e0b'
+            ],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom'
+            }
+          }
+        }
+      });
+    });
+    
+    // 平滑滚动
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const targetId = this.getAttribute('href');
+        const targetElement = document.querySelector(targetId);
+        
+        if (targetElement) {
+          window.scrollTo({
+            top: targetElement.offsetTop - 80,
+            behavior: 'smooth'
+          });
+          
+          // 关闭移动菜单（如果打开）
+          document.getElementById('mobile-menu').classList.add('hidden');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
